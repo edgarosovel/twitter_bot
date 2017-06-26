@@ -1,0 +1,10 @@
+module.exports = {
+my_user:"bot username here",
+admin:"admin username here",
+tokens:{
+  consumer_key:         '...Twitter keys',
+  consumer_secret:      '...',
+  access_token:         '...',
+  access_token_secret:  '...'
+	}
+}

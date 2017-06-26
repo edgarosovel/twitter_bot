@@ -1,0 +1,23 @@
+{
+  "name": "twitter_bot",
+  "version": "1.0.0",
+  "description": "Twitter bot",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/edgarosovel/twitter_bot.git"
+  },
+  "author": "Edgar Osornio Velázquez",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/edgarosovel/twitter_bot/issues"
+  },
+  "homepage": "https://github.com/edgarosovel/twitter_bot#readme",
+  "dependencies": {
+    "mongodb": "^2.2.29",
+    "twit": "^2.2.9"
+  }
+}
