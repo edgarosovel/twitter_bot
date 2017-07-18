@@ -1,0 +1,12 @@
+[Unit]
+Description=Tic Tac Bot Twitter bot
+After=network.target
+
+[Service]
+User=avada
+Restart=always
+Type=simple
+ExecStart=exec node /home/avada/bin/tic_tac_bot/index.js
+
+[Install]
+WantedBy=multi-user.target

@@ -10,7 +10,6 @@ T.get('statuses/user_timeline', { screen_name: conf.my_user, count: 100 }, funct
 
 function handle(){
 	if(i<tweets.length-1){
-		console.log(tweets[i].id_str)
 		borrar(tweets[i].id_str)
 		i+=1
 	}

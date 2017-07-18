@@ -1,13 +1,16 @@
+#!/usr/local/bin/node
 console.log("Twitter bot running...")
 
 var Twit = require('twit')
 const conf = require('./config')
-const emo = require('./emoji.json')
-const inputs = require('./inputs')
-const lines = require('./lines')
+const emo = require('./static/emoji.json')
+const inputs = require('./static/inputs')
+const lines = require('./static/lines')
 var T = new Twit(conf.tokens)
 var stream = T.stream('user')
-
+var fs = require('fs')
+ , Log = require('log')
+ , log = new Log('debug', fs.createWriteStream('log'));
 var mongo = require('mongodb').MongoClient,
   assert = require('assert')
 var url = 'mongodb://localhost:27017/tictac'
@@ -16,9 +19,10 @@ var games = null
 var daily = null
 var all_time = null
 // var service_off = false
+log.info("Twitter bot running...")
 
 mongo.connect(url, function(err, database) {
-	if (err) throw err;
+	if (err) return log.error(err)
 	db = database
 	games = db.collection('games')
 	daily = db.collection('daily_record');
@@ -29,8 +33,6 @@ mongo.connect(url, function(err, database) {
 function start_twitter(){
 	stream.on('tweet',handle_tweet)
 }
-
-function handle_msg
 
 function handle_tweet(msg){
 	if (msg.user.screen_name==conf.my_user) return
@@ -77,6 +79,7 @@ function handle_tweet(msg){
 		    			if (sender!=result.turn) {return}
 		    			//receiver accepts game
 		    			var first = Math.random() >= 0.5 ? receiver : sender
+		    			var second = first == receiver ? sender : receiver 
 		    			var acc = get_acceptance(msg.text)
 		    			if(acc){
 		    				games.updateOne({_id:id}, {game:[0,0,0,0,0,0,0,0,0], lines:{1:0,2:0,3:0,4:0,5:0,6:0,7:0,8:0}, turn:first, mark:1, accepted:2}, function(err, res) {
@@ -84,8 +87,7 @@ function handle_tweet(msg){
 							    	error("gms_acc_2_accepted",tweet_id,receiver,sender)
 							    }else{
 							    	board = format_board(result.game)
-							    	symbol = result.mark == 1 ? emo.x : emo.o
-		    						tweet_it(`🚨🔥Let's play!🔥🚨\n➡@${first}[${symbol}] goes first!\n▶Reply with a number of the board: ${board} \n@${receiver} @${sender}`,tweet_id)
+		    						tweet_it(`🚨🔥Let's play!🔥🚨\n➡@${first}[${emo.x}] goes first!\n▶Reply with a number of the board: ${board} \n@${second}`,tweet_id)
 							    }
 						  	})
 		    			}
@@ -135,10 +137,10 @@ function handle_tweet(msg){
 									    	return
 									    }else{
 									    	//register winner (daily and all_time)
-									    	register_record(sender,1)
-									    	register_record(receiver,0)
 									    	board = format_board(result.game)
 									    	tweet_it(`🏆@${sender}🏆 is the WINNER!\n🎉👏💪🎊${board}\nWant to play again? \nBoth need to reply: [yes/no] \n@${receiver}`,tweet_id)
+									    	register_record(sender,1)
+									    	register_record(receiver,0)
 									    }
 									})
 		    					}
@@ -203,44 +205,52 @@ function handle_tweet(msg){
 
 function register_record(id,option){
 	if (option==1) { //win
-		daily_record.findOne({_id:id}, function(err, result) {
-			if (err) {}
+		daily.findOne({_id:id}, function(err, result) {
+			if (err) return log.error(err)
 			else if(result!=null){
 				daily.updateOne({_id:id},{wins:result.wins+1,loses:result.loses}, function(err, res_mong) {
+					if (err) return log.error(err)
 				})
 			}else{
 				daily.insertOne({_id:id, wins:1, loses:0}, function(err, res) {
+					if (err) return log.error(err)
 				})
 			}
 		})
 		all_time.findOne({_id:id}, function(err, result) {
-			if (err) {}
+			if (err) return log.error(err)
 			else if(result!=null){
 				all_time.updateOne({_id:id},{wins:result.wins+1,loses:result.loses}, function(err, res_mong) {
+					if (err) return log.error(err)
 				})
 			}else{
 				all_time.insertOne({_id:id, wins:1, loses:0}, function(err, res) {
+					if (err) return log.error(err)
 				})
 			}
 		})
 	}else{// lose
-		daily_record.findOne({_id:id}, function(err, result) {
-			if (err) {}
+		daily.findOne({_id:id}, function(err, result) {
+			if (err) return log.error(err)
 			else if(result!=null){
 				daily.updateOne({_id:id},{wins:result.wins,loses:result.loses+1}, function(err, res_mong) {
+					if (err) return log.error(err)
 				})
 			}else{
 				daily.insertOne({_id:id, wins:0, loses:1}, function(err, res) {
+					if (err) return log.error(err)
 				})
 			}
 		})
 		all_time.findOne({_id:id}, function(err, result) {
-			if (err) {}
+			if (err) return log.error(err)
 			else if(result!=null){
 				all_time.updateOne({_id:id},{wins:result.wins,loses:result.loses+1}, function(err, res_mong) {
+					if (err) return log.error(err)
 				})
 			}else{
 				all_time.insertOne({_id:id, wins:0, loses:1}, function(err, res) {
+					if (err) return log.error(err)
 				})
 			}
 		})
@@ -254,7 +264,7 @@ function tweet_it(txt, tweet_id=null){
 	if (tweet_it!=null) obj.in_reply_to_status_id = tweet_id
 	T.post('statuses/update', obj, function(err, data, response) {
 		if (err) {
-			console.log(data)
+			log.warning(data)
 		}
 		else{
 			//sent

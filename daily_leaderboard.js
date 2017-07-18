@@ -1,3 +1,4 @@
+#!/usr/local/bin/node
 var Twit = require('twit')
 const conf = require('./config')
 var T = new Twit(conf.tokens)

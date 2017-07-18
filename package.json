@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/edgarosovel/twitter_bot#readme",
   "dependencies": {
+    "log": "^1.4.0",
     "mongodb": "^2.2.29",
     "twit": "^2.2.9"
   }
